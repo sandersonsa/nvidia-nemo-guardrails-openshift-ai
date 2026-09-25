@@ -1,0 +1,22 @@
+# Flow for evaluating user prompt safety
+define flow check input safety
+  $is_safe = execute check_jailbreak_and_toxicity
+  
+  if not $is_safe
+    bot refuse to respond
+    stop
+
+# Flow for evaluating model output safety
+define flow check output safety
+  $is_output_safe = execute check_response_toxicity
+  
+  if not $is_output_safe
+    bot alter response for safety
+    stop
+
+# Predefined fallback responses
+define bot refuse to respond
+  "I cannot answer that request as it violates safety guidelines."
+
+define bot alter response for safety
+  "I'm sorry, but I generated a response that failed safety checks. How else can I assist you today?"

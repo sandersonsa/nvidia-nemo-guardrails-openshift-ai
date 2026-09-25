@@ -1,0 +1,19 @@
+models:
+  # The main LLM for chatting
+  - type: main
+    engine: openai
+    model: gpt-4o
+
+  # The Safeguard model for content moderation
+  - type: guard
+    engine: openai  # Or utilize specialized local/hosted NIM endpoints
+    model: meta/llama-guard-3-8b
+
+# Turn on global rail interceptors
+rails:
+  input:
+    flows:
+      - check input safety
+  output:
+    flows:
+      - check output safety
