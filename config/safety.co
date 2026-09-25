@@ -1,22 +1,22 @@
-# Flow for evaluating user prompt safety
-define flow check input safety
+# Fluxo que intercepta a pergunta do usuário
+define flow verificar seguranca da entrada
   $is_safe = execute check_jailbreak_and_toxicity
   
   if not $is_safe
-    bot refuse to respond
+    bot recusa responder
     stop
 
-# Flow for evaluating model output safety
-define flow check output safety
+# Fluxo que intercepta a resposta gerada pelo LLM principal
+define flow verificar seguranca da resposta
   $is_output_safe = execute check_response_toxicity
   
   if not $is_output_safe
-    bot alter response for safety
+    bot resposta alterada por seguranca
     stop
 
-# Predefined fallback responses
-define bot refuse to respond
-  "I cannot answer that request as it violates safety guidelines."
+# Mensagens de fallback customizadas em PT-BR
+define bot recusa responder
+  "Desculpe, mas não posso responder a essa solicitação pois ela viola as nossas diretrizes de segurança."
 
-define bot alter response for safety
-  "I'm sorry, but I generated a response that failed safety checks. How else can I assist you today?"
+define bot resposta alterada por seguranca
+  "A resposta gerada violou nossas políticas internas de segurança. Como posso te ajudar com outro assunto?"

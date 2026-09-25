@@ -2,13 +2,15 @@ To use safeguard LLM models (such as Llama Guard or JailbreakDetect) with NVIDIA
 
 Project Directory StructureCreate a dedicated config folder in your project root to handle guardrail behaviors
 
-my_chat_app/
+meu_app_seguro/
 │
 ├── config/
-│   ├── config.yml       # Configures LLM endpoints and guardrail triggers
-│   └── safety.co        # Colang file defining the dialogue safety flows
+│   ├── config.yml       # Endpoints locais + ativação de PII e Off-topic
+│   └── safety.co        # Fluxos em PT-BR para PII, Off-topic e Segurança
 │
-└── app.py               # Your Python chat application code
+├── requirements.txt     # Dependências do projeto
+└── app.py               # Código principal que executa o Chat
+
 
 # Step-by-Step Implementation
 Step 1: Install the Required Libraries
@@ -17,7 +19,7 @@ Install the official NeMo Guardrails library.
 pip install nemoguardrails openai
 
 # Step 2: Configure Models in config.yml
-In your config/config.yml file, register your primary generation model alongside your specialized safeguard model (e.g., Meta's Llama Guard served via an API endpoint or an NVIDIA NIM proxy)
+Neste arquivo, você apontará o NeMo Guardrails para as portas onde seus modelos locais estão rodando (por padrão, o vLLM ou Ollama costumam usar a porta 8000 ou 11434)
 ```yaml
 models:
   # The main LLM for chatting
@@ -41,7 +43,8 @@ rails:
 ```
 
 # Step 3: Define Safety Flows in Colang (safety.co)
-NeMo Guardrails uses a proprietary syntax called Colang to guide conversational logic. In config/safety.co, define how the system reacts if the safeguard model flags text as unsafe.
+O arquivo Colang dita o comportamento do chat. Como o público-alvo fala português, programamos as mensagens de recusa diretamente em PT-BR
+
 ```go
 # Flow for evaluating user prompt safety
 define flow check input safety
@@ -79,3 +82,41 @@ If you want to refine this approach, let me know:
 # Dicas de modelos
 
 Português (PT-BR), a melhor abordagem é utilizar o Llama-3.1-Nemotron-Safety-Guard-8B (um modelo da NVIDIA baseado em Llama fine-tunado especificamente para segurança multilíngue) ou o próprio Llama Guard 3
+
+
+# Executar
+## Passo 1: Instalar as dependências
+Abra o terminal na pasta do projeto e instale os pacotes:
+pip install -r requirements.txt
+
+## Passo 2: Inicializar o vLLM para o Modelo Principal
+python -m vllm.entrypoints.openai.api_server \
+    --model meta-llama/Llama-3.1-8B-Instruct \
+    --port 8000 \
+    --gpu-memory-utilization 0.45
+
+## Passo 3: Inicializar o vLLM para o Modelo de Segurança
+python -m vllm.entrypoints.openai.api_server \
+    --model meta-llama/Llama-Guard-3-8B \
+    --port 8001 \
+    --gpu-memory-utilization 0.45
+
+## Passo 4: Criar e Executar o Script do Aplicativo (app.py)
+python app-test.py
+
+
+<!-- Abra um terminal e inicie o servidor do seu modelo principal (Llama-3.1-8B-Instruct) na porta 8000:
+vllm-openai --model meta-llama/Llama-3.1-8B-Instruct --served-model-name meta-llama/Llama-3.1-8B-Instruct
+
+## Passo 3: Inicializar o vLLM para o Modelo de Segurança (Guard)
+Abra um SEGUNDO terminal e inicie o modelo de segurança (Llama Guard) na porta 8001:
+vllm-openai --model meta-llama/Llama-Guard-3-8B --served-model-name meta-llama/Llama-Guard-3-8B
+
+## Passo 4: Executar a Aplicação Python com NeMo Guardrails
+Com os dois servidores rodando, execute o script Python:
+python app.py
+
+Se for usar a versão estendida (PII e Off-topic), use o arquivo de configuração correspondente:
+config: config-extendido.yml
+safety: safety-extendido.co
+ -->

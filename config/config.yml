@@ -1,19 +1,25 @@
 models:
-  # The main LLM for chatting
+  # Seu modelo principal de Chat (Ex: Llama-3.1-8B-Instruct local)
   - type: main
     engine: openai
-    model: gpt-4o
+    model: meta-llama/Llama-3.1-8B-Instruct
+    parameters:
+      base_url: "http://localhost:8000/v1"  # Endpoint do seu server local (vLLM/Ollama)
+      api_key: "none"
 
-  # The Safeguard model for content moderation
+  # Seu modelo focado em Safeguard (Ex: Llama Guard 3 local)
   - type: guard
-    engine: openai  # Or utilize specialized local/hosted NIM endpoints
-    model: meta/llama-guard-3-8b
+    engine: openai
+    model: meta-llama/Llama-Guard-3-8B
+    parameters:
+      base_url: "http://localhost:8001/v1"  # Porta dedicada ao modelo de segurança
+      api_key: "none"
 
-# Turn on global rail interceptors
+# Ativação das barreiras de entrada (Input) e saída (Output)
 rails:
   input:
     flows:
-      - check input safety
+      - verificar seguranca da entrada
   output:
     flows:
-      - check output safety
+      - verificar seguranca da resposta
