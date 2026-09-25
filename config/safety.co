@@ -1,22 +1,64 @@
-# Fluxo que intercepta a pergunta do usuário
-define flow verificar seguranca da entrada
-  $is_safe = execute check_jailbreak_and_toxicity
-  
-  if not $is_safe
-    bot recusa responder
-    stop
+# --- Defining Allowed Intents (User Allowed Expressions) ---
 
-# Fluxo que intercepta a resposta gerada pelo LLM principal
-define flow verificar seguranca da resposta
-  $is_output_safe = execute check_response_toxicity
-  
-  if not $is_output_safe
-    bot resposta alterada por seguranca
-    stop
+define user perguntar sobre faturamento
+  "minha fatura veio errada"
+  "como pagar o boleto?"
+  "segunda via da conta"
+  "alterar a data de vencimento do faturamento"
+  "quero ver meu histórico de pagamentos"
 
-# Mensagens de fallback customizadas em PT-BR
-define bot recusa responder
+define user perguntar sobre modem
+  "meu modem está piscando vermelho"
+  "a luz da internet apagou"
+  "como reiniciar o roteador?"
+  "configurar senha do wi-fi no modem"
+  "sinal caindo toda hora"
+
+# --- Defining Bot Responses ---
+
+define bot responder faturamento
+  "Posso te ajudar com o seu faturamento. Qual seria o problema com a sua fatura ou boleto?"
+
+define bot responder modem
+  "Entendido. Vamos resolver o problema com o seu modem de internet. O que está acontecendo com as luzes dele?"
+
+define bot avisa fora do topico
+  "Eu sou um assistente especializado estritamente em Faturamento e suporte técnico de Modem de Internet. Não posso ajudar com outros assuntos."
+
+define bot recusa responder por seguranca
   "Desculpe, mas não posso responder a essa solicitação pois ela viola as nossas diretrizes de segurança."
 
-define bot resposta alterada por seguranca
-  "A resposta gerada violou nossas políticas internas de segurança. Como posso te ajudar com outro assunto?"
+define bot recusa por dados sensiveis
+  "Por motivos de privacidade, por favor não compartilhe dados pessoais como CPF ou cartões de crédito aqui."
+
+
+# --- Core Dialogue Flows ---
+
+# Flow: Guardrail for Safety (Llama Guard)
+define flow verificar seguranca da entrada
+  $is_safe = execute check_jailbreak_and_toxicity
+  if not $is_safe
+    bot recusa responder por seguranca
+    stop
+
+# Flow: Guardrail for PII data
+define flow verificar dados sensiveis entrada
+  $contem_pii = execute detect_numerical_pii
+  if $contem_pii
+    bot recusa por dados sensiveis
+    stop
+
+# Flows: Driving Allowed Dialogues
+define flow tratar faturamento
+  user perguntar sobre faturamento
+  bot responder faturamento
+
+define flow tratar modem
+  user perguntar sobre modem
+  bot responder modem
+
+# Flow: Catch-all Fallback for Off-Topic
+# If the message matches none of the allowed intents, this rule intercepts it
+define flow tratar fora do topico
+  user ...
+  bot avisa fora do topico

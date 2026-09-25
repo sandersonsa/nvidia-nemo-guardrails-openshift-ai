@@ -1,25 +1,53 @@
 models:
-  # Seu modelo principal de Chat (Ex: Llama-3.1-8B-Instruct local)
   - type: main
     engine: openai
     model: meta-llama/Llama-3.1-8B-Instruct
     parameters:
-      base_url: "http://localhost:8000/v1"  # Endpoint do seu server local (vLLM/Ollama)
+      base_url: "http://localhost:8000/v1"
       api_key: "none"
 
-  # Seu modelo focado em Safeguard (Ex: Llama Guard 3 local)
   - type: guard
     engine: openai
     model: meta-llama/Llama-Guard-3-8B
     parameters:
-      base_url: "http://localhost:8001/v1"  # Porta dedicada ao modelo de segurança
+      base_url: "http://localhost:8001/v1"
       api_key: "none"
 
-# Ativação das barreiras de entrada (Input) e saída (Output)
+# Define instructions to contextualize the agent
+instructions:
+  - type: general
+    content: "Você é um assistente virtual especializado estritamente em Faturamento e suporte a Modem de Internet. Recuse qualquer outro assunto."
+
+# We drop 'check_off_topic' and let Colang handle strict dialogue mapping
 rails:
   input:
     flows:
       - verificar seguranca da entrada
-  output:
-    flows:
-      - verificar seguranca da resposta
+      - verificar dados sensiveis entrada
+
+
+
+# usando modelo de embeddings customizado.
+models:
+  # ... seus modelos de main e guard existentes ...
+
+  # Novo modelo de embedding local do Hugging Face
+  - type: embeddings
+    engine: sentence_transformers
+    model: sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+
+
+# python -m vllm.entrypoints.openai.api_server \
+#     --model nvidia/llama-nemotron-embed-vl-1b-v2 \
+#     --port 8002
+
+models:
+  # ... seus outros modelos ...
+
+  # Redirecionando embeddings para o vLLM local
+  - type: embeddings
+    engine: openai
+    model: nvidia/llama-nemotron-embed-vl-1b-v2
+    parameters:
+      base_url: "http://localhost:8002/v1"
+      api_key: "none"
