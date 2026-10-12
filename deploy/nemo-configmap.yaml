@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: meu-app-seguro-config
+  namespace: MEU-NAMESPACE-AI
+data:
+  config.yml: |
+    models:
+      - type: main
+        engine: openai
+        model: meta-llama/Llama-3.1-8B-Instruct
+        parameters:
+          base_url: "http://cluster.local"
+          api_key: "placeholder"
+      - type: guard
+        engine: openai
+        model: meta-llama/Llama-Guard-3-8B
+        parameters:
+          base_url: "http://cluster.local"
+          api_key: "placeholder"
+    instructions:
+      - type: general
+        content: "Você é um assistente virtual especializado estritamente em Faturamento e suporte a Modem de Internet."
+    rails:
+      input:
+        flows:
+          - verificar seguranca da entrada
+          - verificar dados sensiveis entrada
+  
+  safety.co: |
+    define user perguntar sobre faturamento
+      "minha fatura veio errada"
+      "como pagar o boleto?"
+    define user perguntar sobre modem
+      "meu modem está piscando vermelho"
+    define bot avisa fora do topico
+      "Eu sou um assistente especializado estritamente em Faturamento e suporte técnico de Modem de Internet."
+    define bot recusa responder por seguranca
+      "Desculpe, mas não posso responder a essa solicitação pois ela viola as nossas diretrizes de segurança."
+    define flow verificar seguranca da entrada
+      $is_safe = execute check_jailbreak_and_toxicity
+      if not $is_safe
+        bot recusa responder por seguranca
+        stop
+    define flow tratar fora do topico
+      user ...
+      bot avisa fora do topico

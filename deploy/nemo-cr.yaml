@@ -1,0 +1,11 @@
+apiVersion: trustyai.opendatahub.io/v1alpha1
+kind: NemoGuardrails
+metadata:
+  name: nemo-proxy-server
+  namespace: MEU-NAMESPACE-AI
+spec:
+  nemoConfigs:
+    - name: meu-app-seguro-config
+      configMaps:
+        - meu-app-seguro-config
+      default: true

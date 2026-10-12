@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nemo-guardrails-proxy
+  namespace: MEU-NAMESPACE-AI
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nemo-guardrails-proxy
+  template:
+    metadata:
+      labels:
+        app: nemo-guardrails-proxy
+    spec:
+      containers:
+        - name: guardrails-server
+          image: nvcr.io/nvidia/clara/nemoguardrails:v0.10.0  # Use your validated stable tag
+          command: ["nemoguardrails", "server", "--config", "/opt/config", "--port", "8080"]
+          ports:
+            - containerPort: 8080
+          volumeMounts:
+            - name: config-volume
+              mountPath: /opt/config
+      volumes:
+        - name: config-volume
+          configMap:
+            name: meu-app-seguro-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nemo-guardrails-service
+  namespace: MEU-NAMESPACE-AI
+spec:
+  ports:
+    - port: 8080
+      targetPort: 8080
+  selector:
+    app: nemo-guardrails-proxy
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: nemo-guardrails-api
+  namespace: MEU-NAMESPACE-AI
+spec:
+  to:
+    kind: Service
+    name: nemo-guardrails-service
+  port:
+    targetPort: 8080
